@@ -108,6 +108,7 @@ def get_event_index_from_event_time(events_df, event_time, period):
     return df_sort
 
 # Some of the following code is extracted from the Laurie on Tracking Github page.
+# https://github.com/Friends-of-Tracking-Data-FoTD/LaurieOnTracking
 
 #Get physical statistics of a team from their tracking by calculating distance covered from their speed over time.
 def get_player_physical_statistics_for_team(team_df, tracking_df, fps):
