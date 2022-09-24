@@ -1,4 +1,4 @@
-# From Kloppy package
+# From Kloppy package: https://github.com/PySport/kloppy
 
 import re
 from typing import List, Tuple, Set, Iterator, IO
