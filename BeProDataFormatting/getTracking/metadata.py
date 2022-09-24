@@ -1,4 +1,4 @@
-#From Kloppy Package
+#From Kloppy Package: https://github.com/PySport/kloppy
 
 from typing import IO
 from lxml import objectify
