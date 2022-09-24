@@ -10,7 +10,11 @@ This work and resources for this work were supported and provided by Bepro Group
 Created using Python 3.8.8, Anaconda installation with a few other libraries like pandas, mplsoccer.
 
 #### Folders: 
-Data Formatting and pre-processing in the BePro notebooks and getTracking folder. Imputation model approach in the PlayerPositionImputation notebook.
+BeProDataFormatting: Contains notebooks used to get the required dataset in the required files to run the model
+
+UtilFunctions: Contains python files with functions used in other notebooks
+
+ImputationModel: Contains the notebook which runs the imputation model
 
 ### Instructions:
 1. Create a folder called "data/Suwon_FC" within the repository
