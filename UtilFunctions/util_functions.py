@@ -107,6 +107,8 @@ def get_event_index_from_event_time(events_df, event_time, period):
         df_sort = (e_df.iloc[(e_df['event_time']-event_time).abs().argsort()[0]]).name
     return df_sort
 
+# Some of the following code is extracted from the Laurie on Tracking Github page.
+
 #Get physical statistics of a team from their tracking by calculating distance covered from their speed over time.
 def get_player_physical_statistics_for_team(team_df, tracking_df, fps):
     team_summary = pd.DataFrame(index=team_df['name'])
