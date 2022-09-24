@@ -22,6 +22,6 @@ Created using Python 3.8.8, Anaconda installation with a few other libraries suc
 3. Create a `tracking` folder, and put each supplied tracking dataset into files for each game in chronological order. Next, run the `BeProGetTracking` notebook to get data in csv format.
 4. Run the `PlayerPositionImputation` notebook to run the model and extract results for imputed players. 
 5. If you would like to use your own dataset to train the model, do so by creating it in the same format as current data files.
-6. If you would like to impute data using final model, run the `PlayerPositionImputation` notebook and save the final model using `Keras`.
+6. If you would like to impute data using final model, run the `PlayerPositionImputation` notebook and save the final model
 
 ## *** WORK IN PROGRESS - NEEDS TIDYING UP AND FURTHER CHANGES BEFORE COMPLETION ***
