@@ -1,4 +1,4 @@
-# From Kloppy
+# From Kloppy package: https://github.com/PySport/kloppy
 import logging
 import sys
 from pandas import DataFrame
