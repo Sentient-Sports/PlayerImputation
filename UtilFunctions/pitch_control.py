@@ -1,5 +1,6 @@
 ''' 
-Pitch plotting functions, using code from Laurie on Tracking Github 
+Pitch plotting functions, using code from Laurie on Tracking Github
+https://github.com/Friends-of-Tracking-Data-FoTD/LaurieOnTracking
 '''
 
 import numpy as np
