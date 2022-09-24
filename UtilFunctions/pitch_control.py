@@ -1,3 +1,7 @@
+''' 
+Pitch plotting functions, using code from Laurie on Tracking Github 
+'''
+
 import numpy as np
 
 #Convert event half to tracking half
