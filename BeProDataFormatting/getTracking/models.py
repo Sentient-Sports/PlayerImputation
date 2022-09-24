@@ -1,4 +1,4 @@
-#From Kloppy package
+#From Kloppy package: https://github.com/PySport/kloppy
 
 from dataclasses import dataclass
 from typing import List, Dict, Union, Set
