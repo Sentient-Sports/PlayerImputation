@@ -1,3 +1,5 @@
+#Using code from Kloppy - https://github.com/PySport/kloppy.git
+
 import logging
 import sys
 from pandas import DataFrame

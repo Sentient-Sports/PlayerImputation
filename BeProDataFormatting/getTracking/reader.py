@@ -1,3 +1,5 @@
+#Using code from Kloppy - https://github.com/PySport/kloppy.git
+
 import re
 from typing import List, Tuple, Set, Iterator, IO
 

@@ -1,3 +1,5 @@
+#Using code from Kloppy - https://github.com/PySport/kloppy.git
+
 from typing import IO
 from lxml import objectify
 import warnings

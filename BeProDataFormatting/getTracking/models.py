@@ -1,10 +1,9 @@
+#Using code from Kloppy - https://github.com/PySport/kloppy.git
+
 from dataclasses import dataclass
 from typing import List, Dict, Union, Set
 
 from kloppy.domain import Team, Player, Metadata
-
-
-# TODO: fill this with from SplitRegisters
 from kloppy.exceptions import DeserializationError
 
 NON_SPLIT_CHAR_REGEX = "[^,;:]*"
