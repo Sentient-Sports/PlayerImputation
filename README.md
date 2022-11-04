@@ -10,11 +10,11 @@ This work and resources for this work were supported and provided by Bepro Group
 Created using Python 3.8.8, Anaconda installation with a other libraries including `pandas`, `numpy`, `pytorch`, `pytorch-geometric`, `mplsoccer`.
 
 ## Folders 
-`BeProDataFormatting`: Contains notebooks used to get the required dataset in the required files to run the model
+`BeProDataFormatting`: Contains notebooks used to get the required dataset in the required files to run the model.
 
-`UtilFunctions`: Contains python files with functions used in other notebooks
+`UtilFunctions`: Contains python files with functions used in other notebooks.
 
-`ImputationModel`: Contains the notebook which runs the imputation model, aswell as all of the model architectures
+`ImputationModel`: Contains the notebook which runs the imputation model. This also contains all model architectures.
 
 ## Instructions
 1. Create a folder called `data/Suwon_FC` within the repository
