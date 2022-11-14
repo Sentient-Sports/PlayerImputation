@@ -7,14 +7,14 @@ Player tracking data has the potential to drive value for clubs and present new 
 This work and resources for this work were supported and provided by Bepro Group Ltd. This data consists of 34 matches of Events and Tracking data for a team in the K League 1. To access this data, enquire about it's availability at enquiries@bepro11.com.
 
 ## Versions 
-Created using Python 3.8.8, Anaconda installation with a few other libraries such as `pandas` and `mplsoccer`.
+Created using Python 3.8.8, Anaconda installation with a other libraries including `pandas`, `numpy`, `pytorch`, `pytorch-geometric`, `mplsoccer`.
 
 ## Folders 
-`BeProDataFormatting`: Contains notebooks used to get the required dataset in the required files to run the model
+`BeProDataFormatting`: Contains notebooks used to get the required dataset in the required files to run the model.
 
-`UtilFunctions`: Contains python files with functions used in other notebooks
+`UtilFunctions`: Contains python files with functions used in other notebooks.
 
-`ImputationModel`: Contains the notebook which runs the imputation model
+`ImputationModel`: Contains the notebook which runs the imputation model. This also contains all model architectures.
 
 ## Instructions
 1. Create a folder called `data/Suwon_FC` within the repository
