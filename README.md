@@ -17,11 +17,9 @@ Created using Python 3.8.8 using Anaconda. All packages used along with versions
 `ImputationModel`: Contains the notebook which runs the imputation model. This also contains all model architectures.
 
 ## Instructions
-1. Create a folder called `data/Suwon_FC` within the repository
-2. Create an `events` folder, and run the `BeProGetEvents` notebook using API calls from BePro to generate the event dataset for each game
-3. Create a `tracking` folder, and put each supplied tracking dataset into files for each game in chronological order. Next, run the `BeProGetTracking` notebook to get data in csv format.
-4. Run the `PlayerPositionImputation` notebook to run the model and extract results for imputed players. 
-5. If you would like to use your own dataset to train the model, do so by creating it in the same format as current data files.
-6. If you would like to impute data using final model, run the `PlayerPositionImputation` notebook and save the final model
-
-## *** WORK IN PROGRESS - NEEDS TIDYING UP AND FURTHER CHANGES BEFORE COMPLETION ***
+1. Create a folder called `Suwon_FC` within the repository.
+2. Create an `events` folder, and run the `BeProDataFormatting/BeProGetEvents.ipynb` notebook using API calls from Bepro to generate the event dataset for each game.
+3. Create a `tracking` folder, and put each supplied tracking dataset into files for each game in chronological order. Next, run the `BeProDataFormatting/BeProGetTracking.ipynb` notebook to get data in csv format.
+4. Run the `ImputationModel/PlayerPositionImputation.ipynb` notebook to run the model and extract results for imputed players. 
+5. Save the imputed positions of players for test events using the functions at the bottom of the `ImputationModel/PlayerPositionImputation.ipynb` notebook. This will save model results in csv format in the `ModelResults` directory.
+6. Run applications of the model and model experiemnts in the `Experiments\ModelApplications.ipynb` notebook
