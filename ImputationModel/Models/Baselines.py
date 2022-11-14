@@ -1,10 +1,19 @@
+"""
+Contains functions for the three naive baselines and the XGBoost baseline
+"""
+
+
 import pandas as pd
 import numpy as np
 from xgboost import XGBRegressor
 from sklearn.multioutput import MultiOutputRegressor
 import math
 
-#Loads input dataframe into baseline format and eccodes values to be appropriately used by XGBoost model. Gets the specific fold
+"""
+Load the data for the baselines to use
+"""
+
+#Loads input dataframe into baseline format and encodes values to be appropriately used by XGBoost model. Gets the specific fold
 def get_baseline_data(whole_df, whole_labels, fold):
     train = list(set(whole_df.index) - set(fold))
     folded_input_train = whole_df.loc[train]
@@ -40,6 +49,12 @@ def get_baseline_data(whole_df, whole_labels, fold):
     xg_cat_train = xg_categories
     xg_cat_test = xg_categories_test
     return base_x_train,base_x_train_cat,base_x_test,base_x_test_cat,base_y_train,base_y_test,xg_cat_train,xg_cat_test
+
+"""
+Naive Baselines
+"""
+
+#Average player location baseline is already in the model notebook.
 
 #BASELINE 1: Gets the average location between the previous and next location of the player
 def baseline_1(x_test, y_test):
@@ -96,9 +111,10 @@ def baseline_2(x_test, y_test):
     base_dist_error = np.mean([math.dist(preds[i],y_test[i]) for i in range(len(base_2_pred_x))])
     return x_test,base_dist_error
 
-#Baseline 3 is in the code already
+"""
+XGBoost Baseline
+"""
 
-#XGBoost Baseline
 def all_xgboost_regression_model(x_train,y_train,x_test,y_test):
     model = MultiOutputRegressor(XGBRegressor(objective ='reg:squarederror', colsample_bytree = 0.8, subsample=0.3, learning_rate = 0.015, max_depth = 7, gamma = 5, n_estimators = 400))
     model.fit(x_train, y_train)

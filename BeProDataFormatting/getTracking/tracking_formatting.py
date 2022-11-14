@@ -9,16 +9,15 @@ import numpy as np
 #Gets tracking data and metadata from EPTS files for a tracking game and outputs tracking df and team dataframes
 def tracking_files_to_df(txt, xml):
     metadata, tracking_df = load_epts_into_pandas.main(xml,txt) #Uses EPTS Python file to get xml and txt file as a dataframe
-    #tracking_df.loc[:,tracking_df.columns.str.contains('velocity')] = tracking_df.loc[:,tracking_df.columns.str.contains('velocity')].apply(lambda xs: [float(math.nan) if x == 'N/A' else float(x) for x in xs])
     
-    #Assumes First Team in MetaData is always the home team
+    #Assumes first Team in MetaData is always the home team
     home_df = pd.DataFrame([[p.player_id, p.name, str(p.attributes.get('position')),p.jersey_no] for p in metadata.teams[0].players], columns = ['player_id','name','position', 'shirt'])
     away_df = pd.DataFrame([[p.player_id, p.name, str(p.attributes.get('position')),p.jersey_no] for p in metadata.teams[1].players], columns = ['player_id','name','position', 'shirt'])
     return tracking_df, home_df, away_df
 
 #Combines first half and second half and also stores event time to link to the event data
 def combine_FH_SH_tracking(data_fh, data_sh):
-    data_fh['event_time'] = (data_fh['frame_id']-300)/30*1000 #250 for padding, 25 for FPS for demo game
+    data_fh['event_time'] = (data_fh['frame_id']-300)/30*1000 #300 for padding, 30 for FPS for demo game
     data_fh['period_id'] = 0
     data_sh['event_time'] = (data_sh['frame_id']-300)/30*1000 + (45*60*1000)
     data_sh['period_id'] = 1

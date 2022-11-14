@@ -1,3 +1,7 @@
+"""
+Contains the loss function, the model training code and the predictions from the model
+"""
+
 import torch
 from torch import nn
 import numpy as np

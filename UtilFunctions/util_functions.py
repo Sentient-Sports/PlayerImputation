@@ -1,17 +1,24 @@
 """
-Utility functions for tracking testings
+Utility functions for tracking, imputation and experiments code
 """
 import pandas as pd
-import UtilFunctions.pitch_control as mpc
 import UtilFunctions.plot_functions as pf
-import ImputationModel.pitch_control as ipc
-import ImputationModel.SuwonLSTMFunctions as SLF
+import UtilFunctions.pitch_control as ipc
 
 params = ipc.default_model_params()
 import seaborn as sns
 import numpy as np
 from matplotlib import pyplot as plt
+from mplsoccer import Pitch
 from statsmodels.stats.weightstats import DescrStatsW
+from pandera.typing import DataFrame, Series
+from typing import Callable, List, Optional, Tuple
+l=8
+w=6
+
+"""
+Load and convert datasets
+"""
 
 # Get all the data based on the game number
 def get_dataframes(game_num):
@@ -172,82 +179,6 @@ def get_event_index_from_event_time(events_df, event_time, period):
     return df_sort
 
 
-# Get physical statistics of a team from their tracking by calculating distance covered from their speed over time.
-# Code from Friends of Tracking Github - https://github.com/Friends-of-Tracking-Data-FoTD/LaurieOnTracking.git
-def get_player_physical_statistics_for_team(team_df, tracking_df, fps):
-    team_summary = pd.DataFrame(index=team_df["name"])
-    minutes = []
-    distance = []
-    walking = []
-    jogging = []
-    running = []
-    sprinting = []
-
-    for player in team_df["player_id"]:
-        # search for first and last frames that we have a position observation for each player (when a player is not on the pitch positions are NaN)
-        mins_column = "player_" + player + "_x"  # use player x-position coordinate
-        dist_column = "player_" + player + "_speed"
-        player_minutes = (
-            (
-                tracking_df[mins_column].last_valid_index()
-                - tracking_df[mins_column].first_valid_index()
-                + 1
-            )
-            / fps
-            / 60.0
-        )  # convert to minutes
-        player_distance = (
-            tracking_df[dist_column].sum() / fps / 1000
-        )  # this is the sum of the distance travelled from one observation to the next (1/25 = 40ms) in km.
-
-        # walking (less than 2 m/s)
-        player_walking_distance = (
-            tracking_df.loc[tracking_df[dist_column] < 2, dist_column].sum()
-            / fps
-            / 1000
-        )
-        # jogging (between 2 and 4 m/s)
-        player_jogging_distance = (
-            tracking_df.loc[
-                (tracking_df[dist_column] >= 2) & (tracking_df[dist_column] < 4),
-                dist_column,
-            ].sum()
-            / fps
-            / 1000
-        )
-        # running (between 4 and 7 m/s)
-        player_running_distance = (
-            tracking_df.loc[
-                (tracking_df[dist_column] >= 4) & (tracking_df[dist_column] < 7),
-                dist_column,
-            ].sum()
-            / fps
-            / 1000
-        )
-        # sprinting (greater than 7 m/s)
-        player_sprinting_distance = (
-            tracking_df.loc[tracking_df[dist_column] >= 7, dist_column].sum()
-            / 25.0
-            / 1000
-        )
-
-        minutes.append(player_minutes)
-        distance.append(player_distance)
-        walking.append(player_walking_distance)
-        jogging.append(player_jogging_distance)
-        running.append(player_running_distance)
-        sprinting.append(player_sprinting_distance)
-
-    team_summary["Minutes Played"] = minutes
-    team_summary["Distance [km]"] = distance
-    team_summary["Walking [km]"] = walking
-    team_summary["Jogging [km]"] = jogging
-    team_summary["Running [km]"] = running
-    team_summary["Sprinting [km]"] = sprinting
-    team_summary = team_summary.sort_values(["Minutes Played"], ascending=False)
-    return team_summary
-
-
 # Get goalkeepers for each team, useful for calling offsides (may cause issue if team has multiple goalkeepers in squad)
 def get_goalkeepers(home_df, away_df):
     return [
@@ -399,9 +330,9 @@ def coords_to_pos(x, y):
     return pos
 
 
-##########
-# Functions used in Experiments notebook
-##########
+"""
+Functions used in Experiments notebook
+"""
 
 # Convert specific roles to generic roles
 def convert_positions_to_generic(results_df):
@@ -421,6 +352,26 @@ def convert_positions_to_generic(results_df):
     results_df.loc[results_df["position"] == "RW", "position"] = "Wide Attacker"
     results_df.loc[results_df["position"] == "LF", "position"] = "Wide Attacker"
     results_df.loc[results_df["position"] == "RF", "position"] = "Wide Attacker"
+    return results_df
+
+# Convert specific roles to generic roles
+def convert_positions_to_generic_sloan(results_df):
+    results_df.loc[results_df["position"] == "GK", "position"] = "Goalkeeper"
+    results_df.loc[results_df["position"] == "CDM", "position"] = "Center Midfielder"
+    results_df.loc[results_df["position"] == "CB", "position"] = "Center Back"
+    results_df.loc[results_df["position"] == "RB", "position"] = "Wing Back"
+    results_df.loc[results_df["position"] == "RWB", "position"] = "Wing Back"
+    results_df.loc[results_df["position"] == "LB", "position"] = "Wing Back"
+    results_df.loc[results_df["position"] == "LWB", "position"] = "Wing Back"
+    results_df.loc[results_df["position"] == "CM", "position"] = "Center Midfielder"
+    results_df.loc[results_df["position"] == "RM", "position"] = "Winger"
+    results_df.loc[results_df["position"] == "LM", "position"] = "Winger"
+    results_df.loc[results_df["position"] == "CAM", "position"] = "Center Midfielder"
+    results_df.loc[results_df["position"] == "CF", "position"] = "Striker"
+    results_df.loc[results_df["position"] == "LW", "position"] = "Winger"
+    results_df.loc[results_df["position"] == "RW", "position"] = "Winger"
+    results_df.loc[results_df["position"] == "LF", "position"] = "Winger"
+    results_df.loc[results_df["position"] == "RF", "position"] = "Winger"
     return results_df
 
 
@@ -483,6 +434,53 @@ def get_rolling_average_error(error_time, match_ids):
 
     # For each second in a game
     for i in range(60, 5650):
+        means = []
+        weights = []
+
+        # Get the rolling average error over last 5 minutes for each game and then average these cross games using a weighted average
+        for mid in match_ids:
+            mid_temp = error_time[
+                (error_time["match_id"] == mid)
+                & (error_time.index > i - 300)
+                & (error_time.index < i)
+            ]["dist"]
+            mid_mean = mid_temp.mean()
+            mid_len = len(mid_temp)
+            means.append(mid_mean)
+            weights.append(mid_len)
+        means = np.array(means)
+        weights = np.array(weights)
+        means = means[~np.isnan(means)]
+        weights = weights[weights > 0]
+        weighted_stats = DescrStatsW(means, weights=weights, ddof=0)
+        weighted_mean = weighted_stats.mean
+        weighted_std = weighted_stats.std
+        rolling_means.append(weighted_mean)
+        rolling_stds.append(weighted_std)
+        rolling_times.append(i)
+
+    # Save in dataframe and return
+    means_df = pd.DataFrame()
+    means_df["times"] = np.array(rolling_times) / 60
+    means_df["means"] = rolling_means
+    means_df["std"] = rolling_stds
+    return means_df
+
+# Get the rolling average error across time periods in a match for 1 half
+def get_rolling_average_error_period1(error_time, match_ids,half):
+    rolling_means = []
+    rolling_stds = []
+    rolling_times = []
+    
+    if half == 1:
+        a = 60
+        b = 2850
+    else:
+        a=2750
+        b=5850
+        
+    # For each second in a game
+    for i in range(a, b):
         means = []
         weights = []
 
@@ -609,6 +607,7 @@ def calculate_model_pitch_control(results_df, event_id, actual):
     )
     PPCFa = all_pitch_control(event_df.iloc[0], event_df, params, False)
     fig, ax = ipc.plot_pitchcontrol_for_event(PPCFa, event_df.iloc[0], event_df)
+    fig.set_size_inches(12,8)
     return PPCFa, ax
 
 
@@ -618,7 +617,8 @@ def get_player_heatmaps(model_df, player_id, match_id, position):
     player_df = model_df[
         (model_df["player_id"] == player_id) & (model_df["match_id"] == match_id)
     ]
-    fig, ax = pf.plot_pitch()
+    pitch = Pitch(pitch_type='uefa', pitch_length = 105, pitch_width=68,pitch_color='grass')
+    fig1,ax1 = pitch.draw()
     sns.kdeplot(
         player_df["act_x"],
         player_df["act_y"],
@@ -626,8 +626,9 @@ def get_player_heatmaps(model_df, player_id, match_id, position):
         label="Actual",
         legend=True,
     )
-    ax.set_title("Actual Heatmap for " + position)
-    fig, ax = pf.plot_pitch()
+    ax1.set_title("Actual Heatmap for " + position,size=20)
+    pitch = Pitch(pitch_type='uefa', pitch_length = 105, pitch_width=68,pitch_color='grass')
+    fig2,ax2 = pitch.draw()
     sns.kdeplot(
         player_df["pred_x"],
         player_df["pred_y"],
@@ -636,4 +637,136 @@ def get_player_heatmaps(model_df, player_id, match_id, position):
         legend=True,
         color="red",
     )
-    ax.set_title("Predicted Heatmap for " + position)
+    ax2.set_title("Predicted Heatmap for " + position,size=20)
+    return fig1,ax1,fig2,ax2
+
+
+#Plot estimated players
+def plot_estimated_players(events, event_id):
+    event_ids = events.drop_duplicates(['event_id']).reset_index()
+    curr_event = events[events['event_id'] == event_id].copy().reset_index(drop=True)
+    ev_index = event_ids[event_ids['event_id'] == event_id].index
+    pitch = Pitch(pitch_type='uefa', pitch_length = 105, pitch_width=68, pitch_color='grass')
+    fig,ax = pitch.draw()
+    fig.set_size_inches(12,6)
+    nums = [1,2,3,4,5,6,7,8,9,10,11]
+    nums2 = [12,13,14,15,16,17,18,19,20,21,22]
+    ax.scatter(curr_event['pred_x'].head(11),curr_event['pred_y'].head(11),s=250, label='Predicted Positions',color='navy')
+    #ax.scatter(105-curr_event['pred_x'].tail(11),68-curr_event['pred_y'].tail(11),s=250, label='Predicted Positions Team2',color='navy')
+    ax.scatter(curr_event['act_x'].head(11),curr_event['act_y'].head(11),s=250, label='Actual Positions',color='white')
+    ax.scatter(curr_event[curr_event['player_on_ball']==True]['act_x'],curr_event[curr_event['player_on_ball']==True]['act_y'],s=100,c='black',label='Ball Position')
+    ax.annotate("", xy=event_ids.loc[ev_index+1][['ballx','bally']].values.flatten(), xytext=event_ids.loc[ev_index][['ballx','bally']].values.flatten(), alpha=0.8, arrowprops=dict(alpha=0.9,width=3,headlength=12.0,headwidth=12.0,color='k'),annotation_clip=False)
+    for i,txt in enumerate(nums):
+        ax.annotate(txt, [(curr_event['pred_x']).iloc[i],(curr_event['pred_y']).iloc[i]+1],size=16)
+        ax.annotate(txt, [(curr_event['act_x']).iloc[i],(curr_event['act_y']).iloc[i]+1],size=16)
+    #for i,txt in enumerate(nums):
+    #    ax.annotate(txt, [(105-curr_event['pred_x']).iloc[i+11],(68-curr_event['pred_y']).iloc[i+11]+1],size=20)
+        
+    ax.legend(loc=2,prop={'size':18})
+    return fig,ax
+
+def _get_cell_indexes(
+    x: Series[float], y: Series[float], l: int = l, w: int = w
+) -> Tuple[Series[int], Series[int]]:
+    xi = x.divide(105).multiply(l)
+    yj = y.divide(68).multiply(w)
+    xi = xi.astype('int64').clip(0, l - 1)
+    yj = yj.astype('int64').clip(0, w - 1)
+    return xi, yj
+
+def _get_flat_indexes(x: Series[float], y: Series[float], l: int =l, w: int = w) -> Series[int]:
+    xi, yj = _get_cell_indexes(x, y, l, w)
+    return yj.rsub(w - 1).mul(l).add(xi)
+
+def get_grid_points(l,w):
+    dx = 105.0/l
+    dy = 68.0/w
+    xgrid = np.arange(l)*dx + dx/2.
+    ygrid = np.arange(w)*dy + dy/2.
+    ygrid = ygrid[::-1]
+    
+    pos = []
+    for i in range( len(ygrid) ):
+        for j in range( len(xgrid) ):
+            target_position = np.array( [xgrid[j], ygrid[i]] )
+            pos.append(target_position)
+    return xgrid,ygrid,pos
+
+"""
+Other possibly useful functions
+"""
+
+# Get physical statistics of a team from their tracking by calculating distance covered from their speed over time.
+# Code from Friends of Tracking Github - https://github.com/Friends-of-Tracking-Data-FoTD/LaurieOnTracking.git
+def get_player_physical_statistics_for_team(team_df, tracking_df, fps):
+    team_summary = pd.DataFrame(index=team_df["name"])
+    minutes = []
+    distance = []
+    walking = []
+    jogging = []
+    running = []
+    sprinting = []
+
+    for player in team_df["player_id"]:
+        # search for first and last frames that we have a position observation for each player (when a player is not on the pitch positions are NaN)
+        mins_column = "player_" + player + "_x"  # use player x-position coordinate
+        dist_column = "player_" + player + "_speed"
+        player_minutes = (
+            (
+                tracking_df[mins_column].last_valid_index()
+                - tracking_df[mins_column].first_valid_index()
+                + 1
+            )
+            / fps
+            / 60.0
+        )  # convert to minutes
+        player_distance = (
+            tracking_df[dist_column].sum() / fps / 1000
+        )  # this is the sum of the distance travelled from one observation to the next (1/25 = 40ms) in km.
+
+        # walking (less than 2 m/s)
+        player_walking_distance = (
+            tracking_df.loc[tracking_df[dist_column] < 2, dist_column].sum()
+            / fps
+            / 1000
+        )
+        # jogging (between 2 and 4 m/s)
+        player_jogging_distance = (
+            tracking_df.loc[
+                (tracking_df[dist_column] >= 2) & (tracking_df[dist_column] < 4),
+                dist_column,
+            ].sum()
+            / fps
+            / 1000
+        )
+        # running (between 4 and 7 m/s)
+        player_running_distance = (
+            tracking_df.loc[
+                (tracking_df[dist_column] >= 4) & (tracking_df[dist_column] < 7),
+                dist_column,
+            ].sum()
+            / fps
+            / 1000
+        )
+        # sprinting (greater than 7 m/s)
+        player_sprinting_distance = (
+            tracking_df.loc[tracking_df[dist_column] >= 7, dist_column].sum()
+            / 25.0
+            / 1000
+        )
+
+        minutes.append(player_minutes)
+        distance.append(player_distance)
+        walking.append(player_walking_distance)
+        jogging.append(player_jogging_distance)
+        running.append(player_running_distance)
+        sprinting.append(player_sprinting_distance)
+
+    team_summary["Minutes Played"] = minutes
+    team_summary["Distance [km]"] = distance
+    team_summary["Walking [km]"] = walking
+    team_summary["Jogging [km]"] = jogging
+    team_summary["Running [km]"] = running
+    team_summary["Sprinting [km]"] = sprinting
+    team_summary = team_summary.sort_values(["Minutes Played"], ascending=False)
+    return team_summary

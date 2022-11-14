@@ -1,12 +1,12 @@
 """ 
 Pitch plotting functions, using code from Laurie on Tracking Github - https://github.com/Friends-of-Tracking-Data-FoTD/LaurieOnTracking.git
 """
+
 from mplsoccer import Pitch
 from matplotlib import animation
 from matplotlib import pyplot as plt
 import pandas as pd
 import math
-import UtilFunctions.util_functions as ut
 import numpy as np
 
 
@@ -68,115 +68,31 @@ def generate_video(tracking_df, home_df, away_df):
 Plot a frame of the game using a row of tracking data
 """
 
-
-def plot_frame(
-    tracking_row,
-    home_df,
-    away_df,
-    figax=None,
-    team_colors=("r", "b"),
-    include_player_velocities=True,
-    PlayerMarkerSize=10,
-    PlayerAlpha=0.7,
-    annotate=True,
-):
-
-    if figax is None:  # create new pitch
-        fig, ax = plot_pitch()
-    else:  # overlay on a previously generated pitch
-        fig, ax = figax  # unpack tuple
-
-    # Get the coordinates for the home and away players in the tracking game
-    x_coords = tracking_row.filter(like="_x")
-    y_coords = tracking_row.filter(like="_y")
-
-    home_ids_x = ["player_" + h + "_x" for h in home_df["player_id"]]
-    away_ids_x = ["player_" + a + "_x" for a in away_df["player_id"]]
-    home_ids_y = ["player_" + h + "_y" for h in home_df["player_id"]]
-    away_ids_y = ["player_" + a + "_y" for a in away_df["player_id"]]
-    home_x_coords = pd.to_numeric(x_coords.filter(items=home_ids_x))
-    home_y_coords = pd.to_numeric(y_coords.filter(items=home_ids_y))
-    away_x_coords = pd.to_numeric(x_coords.filter(items=away_ids_x))
-    away_y_coords = pd.to_numeric(y_coords.filter(items=away_ids_y))
-
-    # Loop over the home team coordinates and plot the players, along with shirt names and player velocities
-    count = 0
-    for x, y in zip(home_x_coords, home_y_coords):
-        ax.plot(
-            x, y, team_colors[0] + "o", MarkerSize=PlayerMarkerSize, alpha=PlayerAlpha
-        )
-        if not (math.isnan(x)) & annotate:
-            ax.text(
-                x + 0.5,
-                y + 0.5,
-                home_df["shirt"][count],
-                fontsize=10,
-                color=team_colors[0],
-            )
-        if not (math.isnan(x)) & include_player_velocities:
-            try:
-                ax.quiver(
-                    x,
-                    y,
-                    tracking_row["player_" + home_df["player_id"][count] + "_vx"],
-                    tracking_row["player_" + home_df["player_id"][count] + "_vy"],
-                    color=team_colors[0],
-                    scale_units="inches",
-                    scale=10.0,
-                    width=0.0025,
-                    headlength=5,
-                    headwidth=3,
-                    alpha=PlayerAlpha,
-                )
-            except:
-                print("No Vel")
-        count += 1
-
-    # Loop over the away team coordinates and plot the players, along with shirt names and player velocities
-    count = 0
-    for x, y in zip(away_x_coords, away_y_coords):
-        ax.plot(
-            x, y, team_colors[1] + "o", MarkerSize=PlayerMarkerSize, alpha=PlayerAlpha
-        )
-        if not (math.isnan(x)) & annotate:
-            ax.text(
-                x + 0.5,
-                y + 0.5,
-                away_df["shirt"][count],
-                fontsize=10,
-                color=team_colors[1],
-            )
-        if not (math.isnan(x)) & include_player_velocities:
-            try:
-                ax.quiver(
-                    x,
-                    y,
-                    tracking_row["player_" + away_df["player_id"][count] + "_vx"],
-                    tracking_row["player_" + away_df["player_id"][count] + "_vy"],
-                    color=team_colors[1],
-                    scale_units="inches",
-                    scale=10.0,
-                    width=0.0025,
-                    headlength=5,
-                    headwidth=3,
-                    alpha=PlayerAlpha,
-                )
-            except:
-                print("No Vel")
-        count += 1
-
-    # Plot the ball location
-    ax.plot(
-        tracking_row["ball_x"],
-        tracking_row["ball_y"],
-        "ko",
-        MarkerSize=10,
-        alpha=1.0,
-        LineWidth=0,
-        color="green",
-    )
-
-    return fig, ax
+#Plots a frame of data with the 360 data included
+def plot_frame(event, locations, figax=None, team_colors=('r','b'), PlayerMarkerSize=15, PlayerAlpha=1, annotate=True ):
+    
+    if figax is None: # create new pitch 
+        fig,ax = plot_event(event)
+    else: # overlay on a previously generated pitch
+        fig,ax = figax # unpack tuple
+    
+    #Get locations of players for teammates and opponents
+    teammate_locs = locations[locations['team_on_ball'] == True]
+    opp_locs = locations[locations['team_on_ball'] == False]
+    
+    #Loop through teammates and plot teammates, and then loop through opponents and plot opponents.
+    for i,row in teammate_locs.iterrows():
+        if (row['position'] == 'GK'):
+            ax.plot(row['x'],row['y'],'g'+'o',MarkerSize=PlayerMarkerSize, alpha=PlayerAlpha)
+        else:
+            ax.plot(row['x'],row['y'],team_colors[0]+'o',MarkerSize=PlayerMarkerSize, alpha=PlayerAlpha)
+                
+    for i,row in opp_locs.iterrows():
+        if (row['position'] == 'GK'):
+            ax.plot(row['x'],row['y'],'g'+'o',MarkerSize=PlayerMarkerSize, alpha=PlayerAlpha)
+        else:
+            ax.plot(row['x'],row['y'],team_colors[1]+'o',MarkerSize=PlayerMarkerSize, alpha=PlayerAlpha)
+    return fig,ax
 
 
 # Plot a sequence of events by plotting where the event took place, and an arrow of where the ball is going if that data is available through relative_event
@@ -214,6 +130,22 @@ def plot_events(
             textstring = row["event_types_0_eventType"] + ": " + str(row["player_id"])
             ax.text(row["x"], row["y"], textstring, fontsize=10, color=color)
     return fig, ax
+
+
+#Plot a single event rather than a sequence. Make it so colour varies based on home/away
+def plot_event(event, figax=None, indicators = ['Marker','Arrow'], color='r', marker_style = 'o', alpha = 1, annotate=False):
+
+    if figax is None: # create new pitch 
+        fig,ax = plot_pitch()
+    else: # overlay on a previously generated pitch
+        fig,ax = figax 
+        
+    color = 'k'
+    
+    if 'Marker' in indicators:
+        ax.plot( event['ballx'], event['bally'], color+marker_style,MarkerSize=15, alpha=alpha )
+    return fig,ax
+
 
 
 # Plots the pitch control at a given event

@@ -1,3 +1,7 @@
+"""
+Functions used during feature engineering to create input data for our imputation models
+"""
+
 import UtilFunctions.util_functions as util_functions
 import torch
 from torch import nn
@@ -7,6 +11,10 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from sklearn import preprocessing
 from torch.utils.data import Dataset
+
+"""
+Feature Engineering
+"""
 
 def get_tracking_indexes(events_df, tracking_df):
     tracking_indexes = [util_functions.get_tracking_index_from_event_time(tracking_df, e, p) for e,p in zip(events_df['event_time'],events_df['event_period'])]
@@ -67,7 +75,7 @@ def get_player_events_y_data(events_df, player):
     return pd.DataFrame({'bally': ball_y,'prev_player_y': prev_player_y,'next_player_y':next_player_y, 'time_since_last_pred':time_since_last_pred, 'prev_player_time': prev_player_time,'next_player_time': next_player_time})
 
 def get_player_categorical_data(events_df, player, team_df, formation):
-    position = formation[str(player)]#list(team_df[team_df['player_id'] == str(player)]['position_name'].values) * len(events_df)
+    position = formation[str(player)]
     event_type = events_df['event_types_0_eventType']
     event_id = events_df['id']
     match_id = events_df['match_id']
@@ -76,19 +84,18 @@ def get_player_categorical_data(events_df, player, team_df, formation):
     player_on_ball = pd.Series(np.where(events_df['player_id'] == player, True, False))
     return pd.DataFrame({'event_id':event_id,'match_id':match_id,'event_time':event_time,'player_id':player,'position':position,'event_type':event_type,'team_on_ball':team_on_ball, 'player_on_ball':player_on_ball})
 
-def get_embedding(category_vec):
-    num_classes = len(category_vec.unique()) #Will need modifying when whole dataset is built
+def get_embedding(category_vec,train):
+    num_classes = len(category_vec.unique())
     emb_size = math.floor(math.sqrt(num_classes))
-    le = preprocessing.LabelEncoder()
-    cat = le.fit_transform(category_vec)
-    embedding = nn.Embedding(num_classes, emb_size)
-    embedded_classes = embedding(torch.tensor(cat))
-    return embedded_classes
+    le = preprocessing.OneHotEncoder(sparse=False, handle_unknown='ignore')
+    le.fit(np.array(category_vec.iloc[train]).reshape(len(category_vec.iloc[train]),1))
+    cat = torch.tensor(np.array(le.transform(np.array(category_vec).reshape(len(category_vec),1)))).to(torch.int64)
+    return cat
 
-def get_embedding_tensor_for_game(categories):
+def get_embedding_tensor_for_game(categories, train):
     cats = torch.tensor([])
     for cat in categories:
-        new_cat = get_embedding(categories[cat])
+        new_cat = get_embedding(categories[cat], train)
         cats = torch.cat((cats,new_cat),axis=1)
     return cats
 
@@ -117,14 +124,20 @@ def get_data(events_df, tracking_df, player, team_df, team_gk, tracking_indexes,
     
     return input_data, label_data
 
-def preprocess_data(input_data, cats, label_data):
-    emb_cats = get_embedding_tensor_for_game(cats)
+def preprocess_data(input_data, cats, label_data, fold):
     scaler = MinMaxScaler(feature_range=(0, 1))
     time_scaler = MinMaxScaler(feature_range=(0, 1))
-    input_data_normalized = scaler.fit_transform(input_data.loc[:, (input_data.columns != "time_since_last_pred") | (input_data.columns != "prev_player_time") | (input_data.columns != "next_player_time")])
-    input_data_time = time_scaler.fit_transform(np.array(input_data[['time_since_last_pred','prev_player_time','next_player_time']]).reshape(-1, 3))
+    train = list(set(input_data.index) - set(fold))
+    input_data_train = input_data.iloc[train]
+    emb_cats = get_embedding_tensor_for_game(cats, train)
+    scaler.fit(input_data_train.loc[:, (input_data_train.columns != "time_since_last_pred") | (input_data_train.columns != "prev_player_time") | (input_data_train.columns != "next_player_time")])
+    time_scaler.fit(np.array(input_data_train[['time_since_last_pred','prev_player_time','next_player_time']]).reshape(-1, 3))
+    input_data_normalized = scaler.transform(input_data.loc[:, (input_data.columns != "time_since_last_pred") | (input_data.columns != "prev_player_time") | (input_data.columns != "next_player_time")])
+    input_data_time = time_scaler.transform(np.array(input_data[['time_since_last_pred','prev_player_time','next_player_time']]).reshape(-1, 3))
     input_data_normalized = np.concatenate((input_data_normalized,input_data_time),axis=1)
-    label_data_normalized = scaler.fit_transform(label_data.reshape(-1, 2))
+    
+    scaler.fit(torch.stack([label_data[i] for i in fold]).reshape(-1,2))
+    label_data_normalized = scaler.transform(label_data.reshape(-1, 2))
     input_data_normalized = torch.cat((torch.tensor(input_data_normalized),emb_cats),1)
     return input_data_normalized, label_data_normalized, scaler
 
@@ -185,7 +198,7 @@ def get_game_data(events_df, tracking_df, home_df, away_df, goalkeepers, formati
     whole_num_input = whole_input[whole_input.columns[~whole_input.columns.isin(['event_id','match_id','event_time','player_id','position','event_type','team_on_ball','player_on_ball','goal_diff'])]]
     return whole_num_input, whole_cat_input, whole_label, tracking_df.loc[tracking_indexes][:],events_df, whole_input
 
-#Sort the input data by event, and then team, and then position
+#Sort the input data by event, and then team, and then position. This is so that data can be passed in correctly 1 event at a time with all 22 players at each event
 def custom_sort(dataframe, whole_label):
     position_dict = {'GK': 0, 'LB': 1, 'LWB' : 2, 'CB': 3,'RB':4,'RWB':5,'CDM':6,'CM':7,'CAM':8,'LW':9,'LF':10,'RW':11,'RF':12,'CF':13} 
     whole_df = pd.DataFrame()

@@ -1,9 +1,14 @@
+"""
+Graph Neural Network Baseline
+"""
+
+
 import ImputationModel.Models.GNN_Module as GCN
 import torch
 from torch import nn
 
 class GNN(nn.Module):
-    def __init__(self, input_size= 25, hidden_layer_size=100, output_size=2, batch_size=128):
+    def __init__(self, input_size= 66, hidden_layer_size=100, output_size=2, batch_size=128):
         
         super().__init__()  
         self.hidden_layer_size = hidden_layer_size

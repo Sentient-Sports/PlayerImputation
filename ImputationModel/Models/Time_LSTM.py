@@ -1,9 +1,13 @@
+"""
+Time-Aware LSTM baseline model
+"""
+
 import torch
 from torch import nn
 import ImputationModel.Models.Time_LSTM_Module as TimeLSTM
 
 class seq_lstm(nn.Module):
-    def __init__(self, input_size= 24, hidden_layer_size=100, output_size=2, batch_size=128):
+    def __init__(self, input_size= 66, hidden_layer_size=100, output_size=2, batch_size=128):
         super().__init__()
         
         self.hidden_layer_size = hidden_layer_size
@@ -19,7 +23,7 @@ class seq_lstm(nn.Module):
         return outs
 
 class Time_LSTM(nn.Module):
-    def __init__(self, input_size= 24, hidden_layer_size=100, output_size=2, batch_size=128):
+    def __init__(self, input_size= 66, hidden_layer_size=100, output_size=2, batch_size=128):
         
         super().__init__()  
         self.hidden_layer_size = hidden_layer_size

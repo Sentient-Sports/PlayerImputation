@@ -1,8 +1,9 @@
-#########
-#Time-Aware LSTM which uses discount rate on memory units to prioritize closer events.
-#Resources: Patient Subtyping via Time-Aware LSTM Networks-https://dl.acm.org/doi/10.1145/3097983.3097997
-#Implementation in Pytorch found at: https://github.com/duskybomb/tlstm.git
-#########
+"""
+Time-Aware LSTM model which uses discount rate on memory units to prioritize closer events.
+Paper: Patient Subtyping via Time-Aware LSTM Networks-https://dl.acm.org/doi/10.1145/3097983.3097997
+***ORIGINAL CODE FOUND AT*** Implementation in Pytorch originally found at: https://github.com/duskybomb/tlstm.git
+"""
+
 import torch
 from torch import nn
 
