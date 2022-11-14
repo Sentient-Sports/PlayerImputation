@@ -17,7 +17,7 @@ Created using Python 3.8.8 using Anaconda. All packages used along with versions
 `ImputationModel`: Contains the notebook which runs the imputation model. This also contains all model architectures.
 
 ## Instructions
-1. Create a folder called `Suwon_FC` within the repository.
+1. Create a folder called `Suwon_FC` within the `data` repository.
 2. Create an `events` folder, and run the `BeProDataFormatting/BeProGetEvents.ipynb` notebook using API calls from Bepro to generate the event dataset for each game.
 3. Create a `tracking` folder, and put each supplied tracking dataset into files for each game in chronological order. Next, run the `BeProDataFormatting/BeProGetTracking.ipynb` notebook to get data in csv format.
 4. Run the `ImputationModel/PlayerPositionImputation.ipynb` notebook to run the model and extract results for imputed players. 
