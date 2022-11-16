@@ -9,7 +9,7 @@ Player tracking data has the potential to drive value for clubs and present new 
 This work and resources for this work were supported and provided by Bepro Group Ltd. This data consists of 34 matches of Events and Tracking data for a team in the K League 1. To access this data, enquire about it's availability at enquiries@bepro11.com.
 
 ## Versions 
-Created using Python 3.8.8 using Anaconda. All packages used along with versions are contained within the `requirements.txt` file. For model training, we suggest using Google Colab to utilize their GPU service.
+Created using Python 3.8.8 and Anaconda. All packages used along with versions are contained within the `requirements.txt` file. For model training, we suggest using Google Colab to utilize their GPU service.
 
 ## Folders 
 `BeProDataFormatting`: Contains notebooks used to get the required dataset in the required files to run the model.
