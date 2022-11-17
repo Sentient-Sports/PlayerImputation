@@ -29,3 +29,6 @@ Created using Python 3.8.8 and Anaconda. All packages used along with versions a
 4. Run the `ImputationModel/PlayerPositionImputation.ipynb` notebook to run the model and extract results for imputed players. 
 5. Save the imputed positions of players for test events using the functions at the bottom of the `ImputationModel/PlayerPositionImputation.ipynb` notebook. This will save model results in csv format in the `ModelResults` directory.
 6. Run applications of the model and model experiemnts in the `Experiments\ModelApplications.ipynb` notebook
+
+## Using a different dataset
+There also exists some open-source event and tracking datasets (e.g., Metrica Sample Data: https://github.com/metrica-sports/sample-data). Our model can be applied to other datasets, but data syncing will be required for it to correctly pass through the feature engineering and model. To do this, look at the functions in the `ImputationModel` directories and appropriately transform the input data to match the data labels used from the Bepro dataset.
